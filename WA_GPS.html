@@ -1,0 +1,912 @@
+<html>
+
+<body>
+
+    <head>
+        <title>WA GPS</title>
+
+        <form id="elevatorFrame">
+            I need to use elevators instead of stairs:<br>
+            <input type="radio" name="elevator" value="yes"> Yes<br>
+            <input type="radio" name="elevator" value="no" checked> No<br>
+        </form>
+
+        <form id="blockFrame">
+            Which room are you nearest before classes start?<br><i>Note: if you don't know yet, room 101 is near the
+                front entrance.</i><br>
+            <input type="text" , name="morning" id="morn"><br><br>
+            A Block:<br>
+            <input type="text" , name="a" id="ablock"> Class name:
+            <input type="text" , name="alabel" id="alabel"><br>
+            B Block:<br>
+            <input type="text" , name="b" id="bblock"> Class name:
+            <input type="text" , name="blabel" id="blabel"><br>
+            C Block:<br>
+            <input type="text" , name="c" id="cblock"> Class name:
+            <input type="text" , name="clabel" id="clabel"><br>
+            D Block:<br>
+            <input type="text" , name="d" id="dblock"> Class name:
+            <input type="text" , name="dlabel" id="dlabel"><br>
+            E Block:<br>
+            <input type="text" , name="e" id="eblock"> Class name:
+            <input type="text" , name="elabel" id="elabel"><br>
+            F Block:<br>
+            <input type="text" , name="f" id="fblock"> Class name:
+            <input type="text" , name="flabel" id="flabel"><br>
+            G Block:<br>
+            <input type="text" , name="g" id="gblock"> Class name:
+            <input type="text" , name="glabel" id="glabel"><br><br>
+
+            Day:
+            <select name="block" id="block">
+                <option value="aa">A</option>
+                <option value="bb">B</option>
+                <option value="cc">C</option>
+                <option value="dd">D</option>
+                <option value="ee">E</option>
+                <option value="ff">F</option>
+                <option value="gg">G</option>
+            </select>
+        </form>
+
+        <button onclick="testing()"> Submit </button>
+
+        <p id="demo"></p>
+
+        <script type="text/javascript">
+            class Maps {
+                static getPoint(y, x, f) {
+                    for (var i = 0; i < Maps.points.length; i++) {
+                        if (parseInt(Maps.points[i][0]) == y && parseInt(Maps.points[i][1]) == x && parseInt(Maps.points[i][2]) == f) {
+                            return Maps.points[i][3];
+                        }
+                    }
+                    return "";
+                }
+
+                static correctedRoomNo(room) {
+                    if (room == 116 || room == 118 || room == 120) {
+                        return parseInt(room) - 3;
+                    } if (room == 130 || room == 132 || room == 134 || room == 218 || room == 220 || room == 222 || room == 236 || room == 238 || room == 240) {
+                        return parseInt(room) + 1;
+                    } if (room == 144 || room == 148) {
+                        return parseInt(room) - 1;
+                    } if (room == 299) {
+                        return 204;
+                    } if (room == 244 || room == 246) {
+                        return parseInt(room) + 5;
+                    } if (room == 200) {
+                        return 203;
+                    } return room;
+                }
+
+                static locate(room) {
+                    room = Maps.correctedRoomNo(room);
+                    for (var i = 0; i < 17; i++) {
+                        for (var j = 0; j < 16; j++) {
+                            if (Math.floor(room / 100) == 2) {  //Top floor
+                                if (Maps.classes[1][i][j] == room) {
+                                    return [i, j, 2];
+                                }
+                            } else {                            //Bottom floor
+                                if (Maps.classes[0][i][j] == room) {
+                                    return [i, j, 1];
+                                }
+                            }
+                        }
+                    }
+                    return [-1, -1, -1];
+                }
+
+                static getUp(num) {
+                    for (var i = 0; i < Maps.rooms.length; i++) {
+                        if (Maps.rooms[i][0] == num) {
+                            return Maps.rooms[i][1];
+                        }
+                    }
+                    return "Error";
+                }
+
+                static getStairDirection(y, x, f) {
+                    for (var i = 0; i < Maps.str.length; i++) {
+                        if (parseInt(Maps.str[i][1]) == y && parseInt(Maps.str[i][2]) == x && parseInt(Maps.str[i][0]) == f) {
+                            return Maps.str[i][3];
+                        }
+                    }
+                    return "ERROR";
+                }
+
+                static getStairLabel(y, x, f) {
+                    for (var i = 0; i < Maps.str.length; i++) {
+                        if (parseInt(Maps.str[i][1]) == y && parseInt(Maps.str[i][2]) == x && parseInt(Maps.str[i][0]) == f) {
+                            return Maps.str[i][4];
+                        }
+                    }
+                    return "ERRORS";
+                }
+
+                static printMap(m) {
+                    var s = ""
+                    for (var i = 0; i < m.length; i++) {
+                        for (var j = 0; j < m[0].length; j++) {
+                            s += m[i][j] + " ";
+                        } s += "\n";
+                    }
+                    return s;
+                }
+
+                static translate(num) { //Translate a special number on the map to its class
+                    if (num == 2) {
+                        return "band";
+                    } else if (num == 299) {
+                        return "library";
+                    } else if (num == 4) {
+                        return "lunch";
+                    } else if (num == 298) {
+                        return "piano lab";
+                    } else if (num == 3) {
+                        return "gym";
+                    } return "room " + num;
+                }
+
+                static toInt(str) {
+                    if (str.toLowerCase() === "band") {
+                        return 2;
+                    } if (str.toLowerCase() === "library") {
+                        return 299;
+                    } if (str.toLowerCase() === "lunch") {
+                        return 4;
+                    } if (str.toLowerCase() === "piano lab") {
+                        return 298;
+                    } if (str.toLowerCase() === "gym") {
+                        return 3;
+                    }
+                    return -1;
+                }
+
+                static getLabel(y, x, f, i, start, wait, elevator) {
+                    var s = "";
+                    if (start) {
+                        // alert("this");
+                        if (i == 0) {
+                            return "Turn left out of the classroom.\n";
+                        } else if (i == 1) {
+                            return "Head straight out of the classroom.\n";
+                        } else {
+                            return "Turn right out of the classroom.\n";
+                        }
+                    }
+                    if (wait && !elevator) {
+                        if (i == 0) {
+                            return "Turn left out of the stairs.\n";
+                        } else if (i == 1) {
+                            return "Head straight out of the stairs.\n";
+                        } else {
+                            return "Turn right out of the stairs.\n";
+                        }
+                    }
+                    if (wait && elevator) {
+                        if (i == 0) {
+                            return "Turn left out of the elevator.\n";
+                        } else if (i == 1) {
+                            return "Head straight out of the elevator.\n";
+                        } else {
+                            return "Turn right out of the elevator.\n";
+                        }
+                    }
+                    s = Maps.getPoint(y, x, f);
+                    if (i == 0) {
+                        if (s === "") {
+                            return "Turn left.\n";
+                        }
+                        return "Turn left " + s + ".\n";
+                    } if (i == 2) {
+                        if (s === "") {
+                            return "Turn right.\n";
+                        }
+                        return "Turn right " + s + ".\n";
+                    }
+                    return "";
+                }
+            }
+
+            class Room {
+                constructor() {
+                    this.num = 0;
+                    this.nme = "";
+                    this.block = "";
+                }
+
+                setValues(nu, na, b) {
+                    this.num = nu;
+                    this.nme = na;
+                    this.block = b;
+                }
+
+                toString() {
+                    if (this.num == 2 || this.num == 3 || this.num == 4 || this.num == 298 || this.num == 299) {
+                        if (this.block === "") {
+                            return Maps.translate(this.num);
+                        } else {
+                            return Maps.translate(this.num) + " (" + this.block + " block)";
+                        }
+                    } else {
+                        if (this.block === "") {
+                            return Maps.translate(this.num) + " (" + this.nme + ")";
+                        } else {
+                            return Maps.translate(this.num) + " (" + this.nme + " - " + this.block + " block)";
+                        }
+                    }
+                }
+
+                getRoom() {
+                    return this.num;
+                }
+            }
+
+            class Pth {
+                constructor(s, t, p, pos, m, di, tar, a, first) {
+                    this.bSize = 0;
+                    this.status = 0;
+                    this.target = [0, 0, 0];
+                    this.maps = [
+                        [
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        ], [
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        ]
+                    ];
+                    this.direction = [-2, -2];
+                    this.position = [-1, -1, -1];
+                    this.path = "";
+                    this.start = true;
+                    this.wait = false;
+
+                    if (first == 0 || first == 1) {
+                        this.branches = [new Pth(0, 0, "", [-1, -1, -1], [[[0]]], [-2, -2], [-1, -1, -1], "", 2), new Pth(0, 0, "", [-1, -1, -1], [[[0]]], [-2, -2], [-1, -1, -1], "", 2), new Pth(0, 0, "", [-1, -1, -1], [[[0]]], [-2, -2], [-1, -1, -1], "", 2)];
+                    }
+
+                    if (first == 0) {
+                        for (var h = 0; h < 2; h++) {
+                            for (var i = 0; i < 17; i++) {
+                                for (var j = 0; j < 16; j++) {
+                                    this.maps[h][i][j] = Maps.classes[h][i][j];
+                                }
+                            }
+                        }
+                        this.target[2] = t;
+                        t = Maps.correctedRoomNo(t);
+
+                        this.setDirection(s);
+                        this.position = Maps.locate(Maps.correctedRoomNo(s));
+                        if (Math.floor(t / 100) == this.position[2] || Math.floor(t / 100) == 0 && this.position[2] == 1) {
+                            this.target[0] = t;
+                        } else {
+                            this.target[0] = 0;
+                            this.target[1] = t;
+                        }
+                        this.maps[this.position[2] - 1][this.position[0]][this.position[1]] = -1;
+                    } else if (first == 1) {
+                        this.start = false;
+                        this.path = p + a;
+                        for (var h = 0; h < 2; h++) {
+                            for (var i = 0; i < 17; i++) {
+                                for (var j = 0; j < 16; j++) {
+                                    this.maps[h][i][j] = m[h][i][j];
+                                }
+                            }
+                        }
+                        this.direction[0] = di[0];
+                        this.direction[1] = di[1];
+                        this.status = 0;
+                        this.target[0] = tar[0];
+                        this.target[1] = tar[1];
+                        this.target[2] = tar[2];
+                        this.position[0] = pos[0] + this.direction[0];
+                        this.position[1] = pos[1] + this.direction[1];
+                        this.position[2] = pos[2];
+
+                    }
+                }
+
+                setDirection(s) {
+                    if (Maps.getUp(s) === "Right") {	//Set initial direction (What is "straight")
+                        this.direction = [0, 1];
+                    } else if (Maps.getUp(s) === "Down") {	//Set initial direction (What is "straight")
+                        this.direction = [1, 0];
+                    } else if (Maps.getUp(s) === "Left") {	//Set initial direction (What is "straight")
+                        this.direction = [0, -1];
+                    } else {
+                        this.direction = [-1, 0];
+                    }
+                }
+
+                move() {
+                    var count = 0;
+                    if (this.update()) {    //Wait will be set here     If you're done, you can break
+                        this.addFinal();
+                        return;
+                    } if (this.status == 1) { //If you're trapped, you can break
+                        return;
+                    }
+                    if (this.status == 2) {       //If you split up, just move the branches and break
+                        for (var i = 0; i < this.bSize; i++) {
+                            this.branches[i].move();
+                        }
+                        return;
+                    }
+                    this.shiftDirection(3); //Turn left
+                    for (var i = 0; i < 3; i++) {   //Count how many directions you can go
+                        if (this.position[0] + this.direction[0] >= 0 && this.position[0] + this.direction[0] <= 16 && this.position[1] + this.direction[1] >= 0 && this.position[1] + this.direction[1] <= 15 &&
+                            Maps.classes[this.position[2] - 1][this.position[0] + this.direction[0]][this.position[1] + this.direction[1]] != 0 && Maps.classes[this.position[2] - 1][this.position[0] + this.direction[0]][this.position[1] + this.direction[1]] != -1) {
+                            count++;
+                        }
+                        this.shiftDirection(1); //Turn left again
+                    }
+                    this.shiftDirection(1);
+                    if (count == 0) {     //Trapped, you can break
+                        this.status = 1;
+
+                        return;
+                    } else if (count == 1) {  //Only one way, just have to find it
+                        for (var i = 0; i < 3; i++) {   //Count how many directions you can go
+                            if (this.position[0] + this.direction[0] >= 0 && this.position[0] + this.direction[0] <= 16 && this.position[1] + this.direction[1] >= 0 && this.position[1] + this.direction[1] <= 15 &&
+                                Maps.classes[this.position[2] - 1][this.position[0] + this.direction[0]][this.position[1] + this.direction[1]] != 0 && Maps.classes[this.position[2] - 1][this.position[0] + this.direction[0]][this.position[1] + this.direction[1]] != -1) {
+                                this.path += Maps.getLabel(this.position[0], this.position[1], this.position[2], i, this.start, this.wait, Main.getElevator());
+                                this.position[0] += this.direction[0];
+                                this.position[1] += this.direction[1];
+
+                                this.start = false;
+                                this.wait = false;
+                                return;
+
+                            }
+                            this.shiftDirection(1); //Turn left again
+                        }
+                    } else {
+
+                        for (var i = 0; i < 3; i++) {
+                            if (this.position[0] + this.direction[0] >= 0 && this.position[0] + this.direction[0] <= 16 && this.position[1] + this.direction[1] >= 0 && this.position[1] + this.direction[1] <= 15 &&
+                                Maps.classes[this.position[2] - 1][this.position[0] + this.direction[0]][this.position[1] + this.direction[1]] != 0 && Maps.classes[this.position[2] - 1][this.position[0] + this.direction[0]][this.position[1] + this.direction[1]] != -1) {
+                                let thing = new Pth(0, 0, this.path, this.position, this.maps, this.direction, this.target, Maps.getLabel(this.position[0], this.position[1], this.position[2], i, this.start, this.wait, Main.getElevator()), 1);
+                                this.branches[this.bSize] = thing;
+                                this.bSize++;
+
+                            }
+
+                            this.shiftDirection(1); //Turn left again
+                            this.status = 2;  //Split up
+                        }
+                    }
+                }
+
+                update() {
+                    this.wait = false;
+                    this.maps[this.position[2] - 1][this.position[0]][this.position[1]] = -1;
+                    if (this.target[0] != 0 && Maps.classes[this.position[2] - 1][this.position[0]][this.position[1]] == this.target[0]) {
+                        this.status = 3;
+                        return true;
+                    } else {
+                        if (this.target[0] == 0 && (!Main.getElevator() && Maps.stairs[this.position[2] - 1][this.position[0]][this.position[1]] == 2 || Main.getElevator() && Maps.stairs[this.position[2] - 1][this.position[0]][this.position[1]] == 3)) {
+                            this.flipFloor();
+                            this.wait = true;
+                            if (this.target[0] != 0 && Maps.classes[this.position[2] - 1][this.position[0]][this.position[1]] == this.target[0]) {
+                                this.status = 3;
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+
+                flipFloor() {
+                    this.start = false;
+                    if (!Main.getElevator()) {
+                        this.path += "Take the stairs" + Maps.getStairLabel(this.position[0], this.position[1], this.position[2]) + ".\n";
+                    } else {
+                        this.path += "Take the elevator" + Maps.getStairLabel(this.position[0], this.position[1], this.position[2]) + ".\n";
+                    }
+
+                    if (this.position[0] == 13 && this.position[1] == 3 && this.position[2] == 1) {   //A technicality with the main staircase
+                        this.position[0] = 12;
+                        this.position[1] = 5;
+                    } if (this.position[0] == 12 && this.position[1] == 5 && this.position[2] == 2) {
+                        this.position[0] = 13;
+                        this.position[1] = 3;
+                    }
+
+                    if (this.position[2] == 1) {
+                        this.position[2] = 2;
+                    } else {
+                        this.position[2] = 1;
+                    }
+
+                    this.target[0] = this.target[1];
+                    this.target[1] = 0;
+
+                    if (Maps.getStairDirection(this.position[0], this.position[1], this.position[2]) === "Right") {
+                        this.direction = [0, 1];
+                    } else if (Maps.getStairDirection(this.position[0], this.position[1], this.position[2]) === "Down") {
+                        this.direction = [1, 0];
+                    } else if (Maps.getStairDirection(this.position[0], this.position[1], this.position[2]) === "Left") {
+                        this.direction = [0, -1];
+                    } else {
+                        this.direction = [-1, 0];
+                    }
+                }
+
+                anyDone() {
+                    if (this.status == 3) {                         //If this is done or trapped, then it's done
+                        return this;
+                    }
+                    if (this.status == 2) {                         //If this isn't done because it split up
+                        for (var i = 0; i < this.bSize; i++) {      //Go through branches, if one is false then not all are done
+                            if (this.branches[i].anyDone() != null) {
+                                return this.branches[i].anyDone();
+                            }
+                        } return null;
+                    } return null;
+                }
+
+                shiftDirection(times) {
+                    for (var i = 0; i < times; i++) {
+                        if (this.direction[1] == 1) {
+                            this.direction[0] = 1;
+                            this.direction[1] = 0;
+                        } else if (this.direction[0] == 1) {
+                            this.direction[0] = 0;
+                            this.direction[1] = -1;
+                        } else if (this.direction[1] == -1) {
+                            this.direction[0] = -1;
+                            this.direction[1] = 0;
+                        } else {
+                            this.direction[0] = 0;
+                            this.direction[1] = 1;
+                        }
+                    }
+                }
+
+                getPath() {
+                    var s = "";
+                    if (this.status != 2) {     //Hasn't split up
+                        return s + this.path + "\n";
+                    } else {                    //Has split up
+                        s = "";
+                        for (var i = 0; i < this.bSize; i++) {
+                            s += this.branches[i].getPath() + "\n";
+                        }
+                    } return s + "\n";
+                }
+
+                addFinal() {
+                    var tar = Maps.getUp(this.target[2]);
+                    var tgt;
+                    var count = 0;
+                    if (tar === "Right") {
+                        tgt = [0, 1];
+                    } else if (tar === "Down") {
+                        tgt = [1, 0];
+                    } else if (tar === "Left") {
+                        tgt = [0, -1];
+                    } else {
+                        tgt = [-1, 0];
+                    }
+                    while (!(tgt[0] == this.direction[0] && tgt[1] == this.direction[1])) {
+                        count++;
+                        if (tgt[1] == 1) {
+                            tgt[0] = 1;
+                            tgt[1] = 0;
+                        } else if (tgt[0] == 1) {
+                            tgt[0] = 0;
+                            tgt[1] = -1;
+                        } else if (tgt[1] == -1) {
+                            tgt[0] = -1;
+                            tgt[1] = 0;
+                        } else {
+                            tgt[0] = 0;
+                            tgt[1] = 1;
+                        }
+                    } if (count == 1) {
+                        this.path += "The class will be on your right.\n";
+                    } else if (count == 2) {
+                        this.path += "The class will be in front of you.\n";
+                    } else if (count == 3) {
+                        this.path += "The class will be on your left.\n";
+                    } else {
+                        this.path += "The class will be behind you.\n";
+                    }
+                }
+
+                getStatus() {
+                    return this.status;
+                }
+            }
+
+            class Main {
+
+                constructor() {
+                    Main.blocks = ["A", "B", "C", "D", "E", "F", "G"];
+                    Main.directions = ["", "", "", "", "", "", ""];
+                    Main.hangout = new Room();
+                    Main.cls = [new Room(), new Room(), new Room(), new Room(), new Room(), new Room(), new Room()];
+                    Main.ind = 0;
+                    Main.day = 0;
+                }
+
+                static getElevator() {
+                    return Main.elevator;
+                }
+
+                static changeElevator(el) {
+                    if (el) {
+                        Main.elevator = true;
+                    } else {
+                        Main.elevator = false;
+                    }
+                }
+
+                myFunction() {
+                    var radios = document.getElementById("elevatorFrame");
+                    var blocks = document.getElementById("blockFrame");
+                    var x = document.getElementById("block").value;
+                    var ind;
+                    var output = "";
+                    var path;
+                    if (x === "aa") {
+                        ind = 0;
+                    } else if (x === "bb") {
+                        ind = 1;
+                    } else if (x === "cc") {
+                        ind = 2;
+                    } else if (x === "dd") {
+                        ind = 3;
+                    } else if (x === "ee") {
+                        ind = 4;
+                    } else if (x === "ff") {
+                        ind = 5;
+                    } else if (x === "gg") {
+                        ind = 6;
+                    }
+                    var text = "";
+                    for (var i = 0, length = radios.length; i < length; i++) {
+                        if (radios[i].checked) {
+                            text = radios[i].value + "<br>";
+                            break;
+                        }
+                    }
+                    if (text === "no<br>") {
+                        Main.changeElevator(false);
+                    } else {
+                        Main.changeElevator(true);
+                    }
+
+                    //Set hangout spot
+                    if (!isNaN(blocks.elements[0].value) && blocks.elements[0].value != "") {
+                        if (Maps.locate(blocks.elements[0].value)[0] != -1) {
+                            Main.hangout.setValues(blocks.elements[0].value, "location before classes", "");
+                        } else {
+                            document.getElementById("demo").innerHTML = "Room " + blocks.elements[0].value + " not found.";
+                            return;
+                        }
+                    } else {
+                        if (Maps.toInt(blocks.elements[0].value) != -1) {
+                            Main.hangout.setValues(Maps.toInt(blocks.elements[0].value), "location before classes", "");
+                        } else {
+                            document.getElementById("demo").innerHTML = "\"" + blocks.elements[0].value + "\" is not a valid room.";
+                            return;
+                        }
+                    }
+
+                    //Set classes
+                    for (var k = 0; k < 7; k++) {
+                        if (!isNaN(blocks.elements[(2 * k) + 1].value) && blocks.elements[(2 * k) + 1].value != "") {
+                            if (Maps.locate(blocks.elements[(2 * k) + 1].value)[0] != -1) {
+                                Main.cls[k].setValues(blocks.elements[(2 * k) + 1].value, blocks.elements[(2 * k) + 2].value, Main.blocks[k]);
+                            } else {
+                                document.getElementById("demo").innerHTML = "Room " + blocks.elements[(2 * k) + 1].value + " not found.";
+                                return;
+                            }
+                        } else {
+                            if (Maps.toInt(blocks.elements[(2 * k) + 1].value) != -1) {
+                                Main.cls[k].setValues(Maps.toInt(blocks.elements[(2 * k) + 1].value), blocks.elements[(2 * k) + 2].value, Main.blocks[k]);
+                            } else {
+                                document.getElementById("demo").innerHTML = "\"" + blocks.elements[(2 * k) + 1].value + "\" is not a valid room.";
+                                return;
+                            }
+                        }
+                    }
+                    Main.output = "";
+
+                    //Set directions
+                    for (var k = 0; k <= 6; k++) {
+                        path = new Pth(Main.cls[k].getRoom(), Main.cls[(k + 1) % 7].getRoom(), "", [-1, -1, -1], [[[0]]], [0, 0], [-1, -1, -1], "", 0);
+                        while (path.anyDone() === null) {
+                            path.move();
+                        }
+                        Main.directions[k] = path.anyDone().getPath() + "\n";
+                    }
+                    for (var k = 0; k < 6; k++) {
+                        if (k == 0) {
+                            Main.output += ("From " + Main.hangout.toString() + " to " + Main.cls[(k + ind) % 7].toString() + ':<br/>');
+                            path = new Pth(Main.hangout.getRoom(), Main.cls[(k + ind) % 7].getRoom(), "", [-1, -1, -1], [[[0]]], [0, 0], [-1, -1, -1], "", 0);
+                            while (path.anyDone() === null) {
+                                path.move();
+                            }
+                            Main.output += path.anyDone().getPath() + '<br/><br/>';
+                        } else {
+                            Main.output += ("From " + Main.cls[(k + ind - 1) % 7].toString() + " to " + Main.cls[(k + ind) % 7].toString() + ':<br/>');
+                            path = new Pth(Main.cls[(k + ind - 1) % 7].getRoom(), Main.cls[(k + ind) % 7].getRoom(), "", [-1, -1, -1], [[[0]]], [0, 0], [-1, -1, -1], "", 0);
+                            while (path.anyDone() === null) {
+                                path.move();
+                            }
+                            Main.output += path.anyDone().getPath() + '<br/><br/>';
+                        }
+                    }
+                    text = "";
+                    for (i = 0; i < blocks.length - 1; i++) {
+                        text += blocks.elements[i].value;
+                    }
+                    document.getElementById("demo").innerHTML = Main.output;
+                }
+            }
+
+            Main.elevator = false;
+
+            Maps.classes = [
+                [
+                    [0, 0, 0, 111, 1, 1, 1, 113, 115, 117, 119, 121, 123, 125, 127, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 131, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 133, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 109, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 105, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 1, 108, 110, 112, 114, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1, 1, 100, 102, 104, 1, 1, 136, 1, 1, 1, 0],
+                    [0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 137, 0],
+                    [0, 0, 0, 1, 0, 103, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 1, 0, 101, 0, 0, 0, 0, 1, 0, 0, 0, 139, 0],
+                    [0, 0, 0, 1, 1, 1, 1, 152, 150, 1, 1, 147, 145, 143, 141, 0],
+                ], [
+                    [0, 0, 0, 217, 1, 1, 1, 219, 221, 223, 225, 227, 229, 231, 233, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 235, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 237, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 239, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 215, 0, 0, 0, 0, 0, 0, 241, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 213, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 211, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 207, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 1, 202, 1, 204, 1, 206, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 0, 298, 0, 0, 0, 0, 0, 0, 0, 0, 243, 0],
+                    [0, 0, 0, 0, 0, 203, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0, 201, 0, 0, 0, 0, 0, 0, 0, 0, 245, 0],
+                    [0, 0, 0, 0, 0, 261, 259, 257, 250, 255, 248, 253, 251, 249, 247, 0],
+                ]
+            ];
+
+            Maps.stairs = [
+                [
+                    [0, 0, 0, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+                    [0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 0],
+                ], [
+                    [0, 0, 0, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 0],
+                ]
+            ];
+
+            Maps.rooms = [
+                ["111", "Down"],
+                ["113", "Down"],
+                ["115", "Down"],
+                ["117", "Down"],
+                ["119", "Down"],
+                ["121", "Down"],
+                ["123", "Down"],
+                ["125", "Down"],
+                ["127", "Down"],
+                ["108", "Down"],
+                ["110", "Down"],
+                ["112", "Down"],
+                ["114", "Down"],
+                ["148", "Down"],
+                ["144", "Down"],
+                ["150", "Down"],
+                ["152", "Down"],
+                ["109", "Right"],
+                ["107", "Right"],
+                ["105", "Right"],
+                ["3", "Right"],
+                ["2", "Right"],
+                ["103", "Right"],
+                ["101", "Right"],
+                ["130", "Right"],
+                ["132", "Right"],
+                ["134", "Right"],
+                ["129", "Left"],
+                ["131", "Left"],
+                ["133", "Left"],
+                ["135", "Left"],
+                ["137", "Left"],
+                ["139", "Left"],
+                ["136", "Left"],
+                ["4", "Left"],
+                ["116", "Up"],
+                ["118", "Up"],
+                ["120", "Up"],
+                ["100", "Up"],
+                ["102", "Up"],
+                ["104", "Up"],
+                ["147", "Up"],
+                ["145", "Up"],
+                ["143", "Up"],
+                ["141", "Up"],
+                ["217", "Down"],
+                ["219", "Down"],
+                ["221", "Down"],
+                ["223", "Down"],
+                ["225", "Down"],
+                ["227", "Down"],
+                ["229", "Down"],
+                ["231", "Down"],
+                ["233", "Down"],
+                ["299", "Down"],
+                ["250", "Down"],
+                ["248", "Down"],
+                ["246", "Down"],
+                ["244", "Down"],
+                ["215", "Right"],
+                ["213", "Right"],
+                ["211", "Right"],
+                ["207", "Right"],
+                ["203", "Right"],
+                ["201", "Right"],
+                ["244", "Right"],
+                ["240", "Right"],
+                ["238", "Right"],
+                ["236", "Right"],
+                ["235", "Left"],
+                ["237", "Left"],
+                ["239", "Left"],
+                ["241", "Left"],
+                ["243", "Left"],
+                ["245", "Left"],
+                ["200", "Left"],
+                ["298", "Left"],
+                ["218", "Up"],
+                ["220", "Up"],
+                ["222", "Up"],
+                ["261", "Up"],
+                ["259", "Up"],
+                ["257", "Up"],
+                ["255", "Up"],
+                ["253", "Up"],
+                ["251", "Up"],
+                ["249", "Up"],
+                ["247", "Up"],
+                ["206", "Up"],
+                ["204", "Up"],
+                ["202", "Up"],
+            ];
+
+            Maps.str = [
+                ["1", "0", "3", "Right", " in the flag lobby"],
+                ["2", "0", "3", "Right", " by the balcony"],
+                ["1", "13", "3", "Left", " (main staircase)"],
+                ["2", "12", "5", "Right", " (main staircase)"],
+                ["1", "16", "10", "Up", " by the benches"],
+                ["2", "16", "10", "Up", " by room 248"],
+                ["1", "16", "14", "Left", " at the end of the hallway (by the TV)"],
+                ["2", "16", "14", "Left", " at the end of the hallway (next to room 145)"],
+                ["1", "12", "14", "Left", " by the exit"],
+                ["2", "12", "14", "Left", " opposite the main stairwell"],
+                ["1", "6", "12", "Left", " by the tech tables"],
+                ["2", "6", "12", "Left", " by the by the math office"],
+                ["1", "0", "14", "Left", " at the end of the hallway"],
+                ["2", "0", "14", "Left", " at the end of the hallway"],
+                ["1", "7", "5", "Right", " by the ramp"],
+                ["2", "7", "5", "Right", " by the windows"],
+                ["1", "9", "5", "Right", " by the entrance to the gym"],   //Elevators
+                ["2", "9", "5", "Right", " next to the main stairwell"],
+                ["1", "0", "4", "Up", " at the end of the hallway"],   //Elevators
+                ["2", "0", "4", "Up", " at the end of the hallway"],
+            ];
+
+            Maps.points = [
+                ["0", "5", "1", "in the flag lobby"],
+                ["0", "12", "1", "by the bathrooms"],
+                ["8", "5", "1", "at the T-intersection"],
+                ["8", "11", "1", "near the candle mural"],
+                ["12", "5", "1", "near the main stairwell"],
+                ["12", "3", "1", "at the bell"],
+                ["16", "3", "1", "at the main entrance"],
+                ["16", "5", "1", "at the main office"],
+                ["16", "10", "1", "by the stairwell"],
+                ["16", "14", "1", "at the TV"],
+                ["12", "14", "1", "by the side exit"],
+                ["12", "11", "1", "by room 136"],
+                ["12", "10", "1", "past/towards the benches"],
+                ["6", "11", "1", "by the courtyard"],
+                ["6", "12", "1", "by the tech tables"],
+                ["0", "5", "2", "in the balcony"],
+                ["0", "12", "2", "by the pillar (science wing)"],
+                ["12", "5", "2", "by the main stairwell"],
+                ["16", "5", "2", "at the corner"],
+                ["16", "14", "2", "by the \"Where English comes alive\" mural"],
+                ["12", "14", "2", "by the stairwell"],
+                ["12", "12", "2", "at the T-intersection"],
+            ];
+        </script>
+    </head>
+</body>
+
+</html>
